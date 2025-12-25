@@ -1,0 +1,12 @@
+<Project>
+
+  <PropertyGroup>
+    <AnalysisMode>All</AnalysisMode>
+    <AnalysisLevel>10.0</AnalysisLevel>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
+  </PropertyGroup>
+
+</Project>
