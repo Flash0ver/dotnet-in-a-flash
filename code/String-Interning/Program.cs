@@ -1,7 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-
-Console.WriteLine("Hello, World!");
+﻿Console.WriteLine("Hello, World!");
 
 string text = String.Create("Hello, World!".Length, "Hello, World!", static (Span<char> span, string state) =>
 {
@@ -18,7 +15,9 @@ Console.WriteLine($"ReferenceEquals: {ReferenceEquals(text, "Hello, World!")}");
 Console.WriteLine($"IsInterned: {String.IsInterned(text) is not null}");
 
 ref char first = ref MemoryMarshal.GetReference(text.AsSpan());
+ref char comma = ref Unsafe.Add(ref first, 5);
 ref char last = ref Unsafe.Add(ref first, text.Length - 1);
+comma = ';';
 last = '?';
 
 Console.WriteLine("Hello, World!");
