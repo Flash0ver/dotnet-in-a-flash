@@ -25,14 +25,14 @@ Let's discuss _String Interning_!
 
 ## String Intern Pool
 
-Per default, the [Roslyn][github-dotnet-roslyn] (the .NET Compiler Platform) automatically interns [string literals][docs-dotnet-csharp-strings] into the [Common Language Runtime][docs-dotnet-clr] (CLR) intern pool.
+By default, [Roslyn][github-dotnet-roslyn] (the .NET Compiler Platform) automatically interns [string literals][docs-dotnet-csharp-strings] into the [Common Language Runtime][docs-dotnet-clr] (CLR) intern pool.
 So the same C# _string literal_ (case-sensitive) is a reference to the unique UTF-16 code unit in memory:
 ```CSharp
 Console.WriteLine(Object.ReferenceEquals("Text", "Text")); // True
 Console.WriteLine(Object.ReferenceEquals("text", "Text")); // False
 ```
 
-With the API [System.String.IsInterned(String)][docs-dotnet-api-system-string-isinterned] we can retrieve a reference to the [String][docs-dotnet-api-system-string] in the CLR intern pool:
+With the API [System.String.IsInterned(String)][docs-dotnet-api-system-string-isinterned] we can retrieve a reference to the [String][docs-dotnet-api-system-string] in the CLR intern pool (if available, `null` otherwise):
 ```CSharp
 Console.WriteLine($"IsInterned: {String.IsInterned("Text") is not null}"); // IsInterned: True
 ```
@@ -55,8 +55,7 @@ Now let's prove _string interning_ in an unorthodox fashion.
 Although references to [String][docs-dotnet-api-system-string] (and likewise the synonymous `string` C# _keyword_) are read-only, the [String][docs-dotnet-api-system-string] in memory itself is not immutable.
 With a bit of _unsafe_ code, we can get a non-readonly `ref` to the first [Char][docs-dotnet-api-system-char] of the [String][docs-dotnet-api-system-string], which we may overwrite.
 Then, with _pointer arithmetic_, we can overwrite all `char`s in the `string`.
-Ultimately, due to the original _string literal_ being interned, the referenced location in memory now contains different _characters_.
-
+Ultimately, due to the original _string literal_ being interned, the referenced location in memory (intern pool) now contains different _characters_.
 ```CSharp
 string text = "Hello, World!";
 Console.WriteLine(text); // Hello, World!
@@ -85,13 +84,13 @@ Console.WriteLine("Hello, World!"); // C#Advent 2025
 With [System.Runtime.InteropServices.MemoryMarshal.GetReference<T>(ReadOnlySpan<T>)][docs-dotnet-api-system-runtime-interopservices-memorymarshal-getreference] we receive the reference to the element of the `Span<T>` or `ReadOnlySpan<T>` at index 0, hence the first _character_ in the _string_.
 
 And with [System.Runtime.CompilerServices.Unsafe.Add<T>(T, Int32)][docs-dotnet-api-system-runtime-compilerservices-unsafe-add] we receive the reference at the specified offset.
-This API is _unsafe_, as we can get a hold of a _managed pointer_ (or an _unmanaged pointer_) outside of the range of the contiguous memory that the `Span<T>`/`ReadOnlySpan<T>` represents, ending up in reinterpreting memory leading to undefined behavior.
-Or, when trying to access memory outside of our process's address space, causing a _segmentation fault_ ([System.AccessViolationException][docs-dotnet-api-system-accessviolationexception]).
+This API is _unsafe_, as we can get a hold of a _managed pointer_ (or an _unmanaged pointer_) outside the range of the contiguous memory that the `Span<T>`/`ReadOnlySpan<T>` represents, ending up reinterpreting memory, leading to undefined behavior.
+Or, more fatally , when trying to access memory outside of our process's address space, causing a _segmentation fault_ ([System.AccessViolationException][docs-dotnet-api-system-accessviolationexception]).
 
 ## Summary
 
 Playing some shenanigans with C# and the .NET Runtime, I showcased _String Interning_ of the Compiler and the CLR.
-To be fair, the _Working Set_ for _C# 15.0_ includes the [evolution of `unsafe`][github-dotnet-csharplang-unsafe-evolution], but that's another post for another time.
+Speaking of `unsafe`, the _Working Set_ for _C# 15.0_ includes the [evolution of `unsafe`][github-dotnet-csharplang-unsafe-evolution], but that's another post for another time.
 
 ## Would you like to know more?
 - [C# 14.0: String literals in data section as UTF-8 (experimental feature)][github-dotnet-roslyn-string-literals-data-section]
@@ -100,11 +99,12 @@ To be fair, the _Working Set_ for _C# 15.0_ includes the [evolution of `unsafe`]
 - Blog post **#1**
 - Tags: dotnet;csharp;runtime;string;interning;unsafe;marshal;memory
 - Example: [StringInterning](./../code/String-Interning/)
+- Discussion: [String Interning #1](https://github.com/Flash0ver/dotnet-in-a-flash/discussions/1)
 - History
-  - **2025-12-27**: various fixes, additional links and resources, revise demo project
+  - **2025-12-27**: various fixes, additional links and resources, revise demo project, add _GitHub Discussion_
   - **2025-12-25**: Initial publish
 
-[goto top](#string-interning)
+[`goto` top](#string-interning) | [Edit this page](https://github.com/Flash0ver/dotnet-in-a-flash/edit/main/blog/String-Interning.md) (fixes and improvements are appreciated) | [Create a new issue](https://github.com/Flash0ver/dotnet-in-a-flash/issues/new?title=fix(string-interning):&body=Describe+the+problem+with+the+blog+post:+_String-Interning_)
 
 [csharp-advent]: https://csadvent.christmas/
 [github-dotnet-roslyn]: https://github.com/dotnet/roslyn
